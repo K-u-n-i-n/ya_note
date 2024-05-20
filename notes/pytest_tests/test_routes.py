@@ -6,8 +6,6 @@ from django.urls import reverse
 from pytest_django.asserts import assertRedirects
 
 
-
-
 @pytest.mark.parametrize(
     'name',
     ('notes:list', 'notes:add', 'notes:success')
@@ -17,9 +15,8 @@ def test_pages_availability_for_auth_user(not_author_client, name):
     response = not_author_client.get(url)
     assert response.status_code == HTTPStatus.OK
 
+
 # Доступность страниц для автора заметки.
-
-
 @pytest.mark.parametrize(
     'parametrized_client, expected_status',
     # Предварительно оборачиваем имена фикстур
