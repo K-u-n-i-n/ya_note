@@ -20,25 +20,37 @@ class NotesFormsTests(TestCase):
             slug='note-slug',
             author=cls.author,
         )
+        cls.url_list_notes = reverse('notes:list')
 
-    # Тест для проверки, что в список заметок одного пользователя
-    # не попадают заметки другого пользователя.
+        cls.clients = {
+            'author': cls.client_class(),
+            'not_author': cls.client_class(),
+        }
+
+        cls.clients['author'].force_login(cls.author)
+        cls.clients['not_author'].force_login(cls.not_author)
+
     def test_notes_list_for_different_users(self):
+        """
+        Тест для проверки, что в список заметок одного пользователя
+        не попадают заметки другого пользователя.
+        """
         users_statuses = (
-            (self.author, True),
-            (self.not_author, False),
+            ('author', True),
+            ('not_author', False),
         )
-        for user, note_in_list in users_statuses:
-            self.client.force_login(user)
-            url = reverse('notes:list')
-            response = self.client.get(url)
-            object_list = response.context['object_list']
-            with self.subTest(user=user):
-                self.assertEqual((self.note in object_list), note_in_list)
 
-    # Тест для проверки, что на страницы создания и редактирования
-    # заметки передаются формы.
+        for user_key, note_in_list in users_statuses:
+            with self.subTest(user=user_key):
+                response = self.clients[user_key].get(self.url_list_notes)
+                notes = response.context['object_list']
+                self.assertEqual((self.note in notes), note_in_list)
+
     def test_pages_contains_form(self):
+        """
+        Тест для проверки, что на страницы создания и редактирования
+        заметки передаются формы.
+        """
         urls_args = (
             ('notes:add', None),
             ('notes:edit', (self.note.slug,)),

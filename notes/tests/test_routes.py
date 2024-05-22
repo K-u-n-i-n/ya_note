@@ -1,7 +1,6 @@
 from http import HTTPStatus
-
-from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 
 from notes.models import Note
@@ -22,9 +21,11 @@ class NotesTests(TestCase):
             author=cls.author,
         )
 
-    # Тест на проверку доступности страниц
-    # для анонимного пользователя.
     def test_pages_availability_for_anonymous_user(self):
+        """
+        Тест на проверку доступности страниц
+        для анонимного пользователя.
+        """
         urls = (
             ('notes:home', None),
             ('users:login', None),
@@ -37,9 +38,11 @@ class NotesTests(TestCase):
                 response = self.client.get(url)
                 self.assertEqual(response.status_code, HTTPStatus.OK)
 
-    # Тест на проверку доступности страниц
-    # для аутентифицированного пользователя.
     def test_pages_availability_for_auth_user(self):
+        """
+        Тест на проверку доступности страниц
+        для аутентифицированного пользователя.
+        """
         urls = (
             ('notes:list', None),
             ('notes:add', None),
@@ -52,9 +55,11 @@ class NotesTests(TestCase):
                 response = self.client.get(url)
                 self.assertEqual(response.status_code, HTTPStatus.OK)
 
-    # Тест на проверку доступности страниц отдельной заметки,
-    # удаления и редактирования заметки для разных пользователей.
     def test_pages_availability_for_different_users(self):
+        """
+        Тест на проверку доступности страниц отдельной заметки,
+        удаления и редактирования заметки для разных пользователей.
+        """
         users_statuses = (
             (self.not_author, HTTPStatus.NOT_FOUND),
             (self.author, HTTPStatus.OK),
@@ -67,8 +72,8 @@ class NotesTests(TestCase):
                     response = self.client.get(url)
                     self.assertEqual(response.status_code, status)
 
-    # Тест на проверку перенаправлений для анонимного пользователя.
     def test_redirects_for_anonymous_user(self):
+        """Тест на проверку перенаправлений для анонимного пользователя."""
         login_url = reverse('users:login')
         urls_args = (
             ('notes:detail', (self.note.slug,)),
