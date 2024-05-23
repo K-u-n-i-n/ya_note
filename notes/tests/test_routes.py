@@ -14,14 +14,7 @@ class NotesTests(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        """
-        Создание тестовых пользователей и заметки.
-
-        Метод:
-        1. Создаем двух пользователей: автора и не автора.
-        2. Создаем заметку, принадлежащую автору.
-        3. Создаем клиентов и логиним их.
-        """
+        """Создание тестовых пользователей и заметки."""
         cls.author = User.objects.create(username='Автор')
         cls.not_author = User.objects.create(username='Не автор')
         cls.note = Note.objects.create(
@@ -36,14 +29,7 @@ class NotesTests(TestCase):
         cls.client_not_author.force_login(cls.not_author)
 
     def test_pages_availability_for_anonymous_user(self):
-        """
-        Проверяет доступность страниц для анонимного пользователя.
-
-        Метод:
-        1. Перебираем URL страниц, доступных для анонимного пользователя.
-        2. Для каждой страницы отправляем GET-запрос и проверяем,
-        что статус ответа HTTP 200 (OK).
-        """
+        """Проверяет доступность страниц для анонимного пользователя."""
         urls = (
             ('notes:home', None),
             ('users:login', None),
@@ -57,15 +43,7 @@ class NotesTests(TestCase):
                 self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_pages_availability_for_auth_user(self):
-        """
-        Проверяет доступность страниц для аутентифицированного пользователя.
-
-        Метод:
-        1. Перебираем URL страниц, доступных для аутентифицированного
-        пользователя.
-        2. Для каждой страницы отправляем GET-запрос от имени не автора
-        и проверяем, что статус ответа HTTP 200 (OK).
-        """
+        """Проверяет доступность страниц для аутентифицированного поль-теля."""
         urls = (
             ('notes:list', None),
             ('notes:add', None),
@@ -78,15 +56,7 @@ class NotesTests(TestCase):
                 self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_pages_availability_for_different_users(self):
-        """
-        Проверяет доступность страниц заметок для разных пользователей.
-
-        Метод:
-        1. Перебираем пары (пользователь, ожидаемый статус ответа).
-        2. Логинимся под каждым пользователем и проверяем доступность страниц.
-        3. Для каждой страницы проверяем, соответствует ли статус ответа
-        ожидаемому значению.
-        """
+        """Проверяет доступность страниц заметок для разных пользователей."""
         clients_statuses = (
             (self.client_not_author, HTTPStatus.NOT_FOUND),
             (self.client_author, HTTPStatus.OK),
@@ -99,16 +69,7 @@ class NotesTests(TestCase):
                     self.assertEqual(response.status_code, status)
 
     def test_redirects_for_anonymous_user(self):
-        """
-        Проверяет перенаправления для анонимного пользователя.
-
-        Метод:
-        1. Перебираем URL страниц, требующих аутентификации.
-        2. Для каждой страницы отправляем GET-запрос от анонимного
-        пользователя.
-        3. Проверяем, что происходит перенаправление на страницу логина с
-        параметром next, содержащим запрашиваемый URL.
-        """
+        """Проверяет перенаправления для анонимного пользователя."""
         login_url = reverse('users:login')
         urls_args = (
             ('notes:detail', (self.note.slug,)),

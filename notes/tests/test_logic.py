@@ -13,9 +13,11 @@ User = get_user_model()
 
 
 class NotesFormsTests(TestCase):
+    """Тесты для проверки работы форм создания и редактирования заметок."""
 
     @classmethod
     def setUpTestData(cls):
+        """Создание тестовых данных для всех тестов."""
         cls.author = User.objects.create_user(
             username='author', password='password')
         cls.other_user = User.objects.create_user(
@@ -47,7 +49,7 @@ class NotesFormsTests(TestCase):
             'notes:delete', args=(cls.other_note.slug,))
 
     def test_user_can_create_note(self):
-        """Тест для залогиненного пользователя - может создать заметку."""
+        """Проверяет, что залогиненный пользователь может создать заметку."""
         self.client.login(username='author', password='password')
         notes_count_before = Note.objects.count()
         response = self.client.get(self.add_url)
