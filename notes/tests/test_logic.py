@@ -43,6 +43,8 @@ class NotesFormsTests(TestCase):
         cls.edit_url = reverse('notes:edit', args=(cls.note.slug,))
         cls.not_edit_url = reverse('notes:edit', args=(cls.other_note.slug,))
         cls.delete_url = reverse('notes:delete', args=(cls.note.slug,))
+        cls.not_delete_url = reverse(
+            'notes:delete', args=(cls.other_note.slug,))
 
     def test_user_can_create_note(self):
         """Тест для залогиненного пользователя - может создать заметку."""
@@ -119,8 +121,22 @@ class NotesFormsTests(TestCase):
 
     def test_user_cant_edit_others_note(self):
         """Тест на невозможность редактирования чужой заметки."""
-        self.client.login(username='author', password='password')        
+        self.client.login(username='author', password='password')
+        original_title = self.other_note.title
+        original_text = self.other_note.text
+        original_slug = self.other_note.slug
         response = self.client.post(self.not_edit_url, data=self.form_data)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-        self.other_note.refresh_from_db()
-        self.assertNotEqual(self.other_note.title, self.form_data['title'])
+        other_note_from_db = Note.objects.get(id=self.other_note.id)
+        self.assertEqual(other_note_from_db.title, original_title)
+        self.assertEqual(other_note_from_db.text, original_text)
+        self.assertEqual(other_note_from_db.slug, original_slug)
+
+    def test_user_cant_delete_others_note(self):
+        """Тест на невозможность удаления чужой заметки."""
+        self.client.login(username='author', password='password')
+        notes_count_before = Note.objects.count()
+        response = self.client.post(self.not_delete_url)
+        notes_count_after = Note.objects.count()
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertEqual(notes_count_after, notes_count_before)
