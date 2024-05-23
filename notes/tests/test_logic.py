@@ -41,6 +41,7 @@ class NotesFormsTests(TestCase):
         cls.success_url = reverse('notes:success')
         cls.login_url = reverse('users:login')
         cls.edit_url = reverse('notes:edit', args=(cls.note.slug,))
+        cls.not_edit_url = reverse('notes:edit', args=(cls.other_note.slug,))
         cls.delete_url = reverse('notes:delete', args=(cls.note.slug,))
 
     def test_user_can_create_note(self):
@@ -115,3 +116,11 @@ class NotesFormsTests(TestCase):
         self.assertRedirects(response, self.success_url)
         notes_count_after = Note.objects.count()
         self.assertEqual(notes_count_after, notes_count_before - 1)
+
+    def test_user_cant_edit_others_note(self):
+        """Тест на невозможность редактирования чужой заметки."""
+        self.client.login(username='author', password='password')        
+        response = self.client.post(self.not_edit_url, data=self.form_data)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.other_note.refresh_from_db()
+        self.assertNotEqual(self.other_note.title, self.form_data['title'])
