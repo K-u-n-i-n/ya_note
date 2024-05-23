@@ -41,6 +41,7 @@ class NotesFormsTests(TestCase):
         cls.success_url = reverse('notes:success')
         cls.login_url = reverse('users:login')
         cls.edit_url = reverse('notes:edit', args=(cls.note.slug,))
+        cls.delete_url = reverse('notes:delete', args=(cls.note.slug,))
 
     def test_user_can_create_note(self):
         """Тест для залогиненного пользователя - может создать заметку."""
@@ -105,3 +106,12 @@ class NotesFormsTests(TestCase):
         self.assertEqual(self.note.text, self.form_data['text'])
         self.assertEqual(self.note.slug, self.form_data['slug'])
         self.assertEqual(self.note.author, self.author)
+
+    def test_author_can_delete_note(self):
+        """Тест на удаление своей заметки."""
+        self.client.login(username='author', password='password')
+        notes_count_before = Note.objects.count()
+        response = self.client.post(self.delete_url)
+        self.assertRedirects(response, self.success_url)
+        notes_count_after = Note.objects.count()
+        self.assertEqual(notes_count_after, notes_count_before - 1)
