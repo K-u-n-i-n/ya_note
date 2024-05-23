@@ -1,8 +1,11 @@
 from http import HTTPStatus
+
+from pytils.translit import slugify
+
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
-from django.contrib.auth import get_user_model
-from pytils.translit import slugify
+
 
 from notes.forms import WARNING
 from notes.models import Note
@@ -16,6 +19,8 @@ class NotesFormsTests(TestCase):
     def setUpTestData(cls):
         cls.author = User.objects.create_user(
             username='author', password='password')
+        cls.other_user = User.objects.create_user(
+            username='other', password='password')
         cls.form_data = {
             'title': 'Test Title',
             'text': 'Test Text',
@@ -27,29 +32,27 @@ class NotesFormsTests(TestCase):
             slug='existing-slug',
             author=cls.author,
         )
+        cls.other_note = Note.objects.create(
+            title='Other Title',
+            text='Other Text',
+            slug='other-slug',
+            author=cls.other_user,
+        )
+        cls.add_url = reverse('notes:add')
+        cls.success_url = reverse('notes:success')
+        cls.login_url = reverse('users:login')
 
     def setUp(self):
         self.client.login(username='author', password='password')
 
-    def create_other_user_and_note(self):
-        other_user = User.objects.create_user(
-            username='other', password='password'
-        )
-        other_note = Note.objects.create(
-            title='Other Title',
-            text='Other Text',
-            slug='other-slug',
-            author=other_user,
-        )
-        return other_note
-
     def test_user_can_create_note(self):
         """Тест для залогиненного пользователя - может создать заметку."""
-        url = reverse('notes:add')
-        response = self.client.post(url, data=self.form_data)
-        self.assertRedirects(response, reverse('notes:success'))
-        self.assertEqual(Note.objects.count(), 2)
-        new_note = Note.objects.latest('id')
+        notes_count_before = Note.objects.count()
+        response = self.client.post(self.add_url, data=self.form_data)
+        self.assertRedirects(response, self.success_url)
+        notes_count_after = Note.objects.count()
+        self.assertEqual(notes_count_after, notes_count_before + 1)
+        new_note = Note.objects.get(slug=self.form_data['slug'])
         self.assertEqual(new_note.title, self.form_data['title'])
         self.assertEqual(new_note.text, self.form_data['text'])
         self.assertEqual(new_note.slug, self.form_data['slug'])
@@ -58,12 +61,12 @@ class NotesFormsTests(TestCase):
     def test_anonymous_user_cant_create_note(self):
         """Тест для анонимного пользователя - не может создать заметку."""
         self.client.logout()
-        url = reverse('notes:add')
-        response = self.client.post(url, data=self.form_data)
-        login_url = reverse('users:login')
-        expected_url = f'{login_url}?next={url}'
+        notes_count_before = Note.objects.count()
+        response = self.client.post(self.add_url, data=self.form_data)
+        expected_url = f'{self.login_url}?next={self.add_url}'
         self.assertRedirects(response, expected_url)
-        self.assertEqual(Note.objects.count(), 1)
+        notes_count_after = Note.objects.count()
+        self.assertEqual(notes_count_after, notes_count_before)
 
     def test_not_unique_slug(self):
         """Невозможно создать две заметки с одинаковым slug."""

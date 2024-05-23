@@ -21,12 +21,10 @@ class NotesFormsTests(TestCase):
             author=cls.author,
         )
         cls.url_list_notes = reverse('notes:list')
-
         cls.clients = {
             'author': cls.client_class(),
             'not_author': cls.client_class(),
         }
-
         cls.clients['author'].force_login(cls.author)
         cls.clients['not_author'].force_login(cls.not_author)
 
