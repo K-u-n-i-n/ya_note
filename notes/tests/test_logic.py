@@ -40,25 +40,18 @@ class NotesFormsTests(TestCase):
         cls.add_url = reverse('notes:add')
         cls.success_url = reverse('notes:success')
         cls.login_url = reverse('users:login')
+        cls.edit_url = reverse('notes:edit', args=(cls.note.slug,))
 
     def test_user_can_create_note(self):
         """Тест для залогиненного пользователя - может создать заметку."""
         self.client.login(username='author', password='password')
-
         notes_count_before = Note.objects.count()
-
-        # Проверяем, что пользователь залогинен
         response = self.client.get(self.add_url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
-
         response = self.client.post(self.add_url, data=self.form_data)
-
-        # Проверяем, что форма прошла валидацию и произошел редирект на success_url
         self.assertRedirects(response, self.success_url)
-
         notes_count_after = Note.objects.count()
         self.assertEqual(notes_count_after, notes_count_before + 1)
-
         new_note = Note.objects.get(slug=self.form_data['slug'])
         self.assertEqual(new_note.title, self.form_data['title'])
         self.assertEqual(new_note.text, self.form_data['text'])
@@ -87,4 +80,28 @@ class NotesFormsTests(TestCase):
         notes_count_after = Note.objects.count()
         self.assertEqual(notes_count_after, notes_count_before)
 
-    
+    def test_empty_slug(self):
+        """Тест на автоматическое создание slug."""
+        self.client.login(username='author', password='password')
+        Note.objects.all().delete()
+        form_data = self.form_data.copy()
+        form_data.pop('slug')
+        notes_count_before = Note.objects.count()
+        response = self.client.post(self.add_url, data=form_data)
+        self.assertRedirects(response, reverse('notes:success'))
+        notes_count_after = Note.objects.count()
+        self.assertEqual(notes_count_after, notes_count_before + 1)
+        new_note = Note.objects.get(title=form_data['title'])
+        expected_slug = slugify(form_data['title'])
+        self.assertEqual(new_note.slug, expected_slug)
+
+    def test_author_can_edit_note(self):
+        """Тест на редактирование своей заметки"""
+        self.client.login(username='author', password='password')
+        response = self.client.post(self.edit_url, data=self.form_data)
+        self.assertRedirects(response, self.success_url)
+        self.note.refresh_from_db()
+        self.assertEqual(self.note.title, self.form_data['title'])
+        self.assertEqual(self.note.text, self.form_data['text'])
+        self.assertEqual(self.note.slug, self.form_data['slug'])
+        self.assertEqual(self.note.author, self.author)
