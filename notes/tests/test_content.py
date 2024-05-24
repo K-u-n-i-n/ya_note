@@ -51,17 +51,11 @@ class NotesFormsTests(BaseNotesTest):
 class NotesPagesTests(BaseNotesTest):
     """Тесты для проверки страниц создания и редактирования заметок."""
 
-    @classmethod
-    def setUpTestData(cls):
-        super().setUpTestData()
-        cls.client_author = cls.client_class()
-        cls.client_author.force_login(cls.author)
-
     def test_pages_contains_form(self):
         """Проверяет наличие формы на страницах заметок."""
         urls = (self.url_add_note, self.url_edit_note)
         for url in urls:
-            response = self.client_author.get(url)
+            response = self.clients['author'].get(url)
             with self.subTest(url=url):
                 self.assertIn('form', response.context)
                 self.assertIsInstance(response.context['form'], NoteForm)
