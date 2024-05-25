@@ -106,7 +106,7 @@ class NotesFormsTests(TestCase):
         self.assertEqual(self.note.title, self.form_data['title'])
         self.assertEqual(self.note.text, self.form_data['text'])
         self.assertEqual(self.note.slug, self.form_data['slug'])
-        self.assertEqual(self.note.author, User.objects.get(username='author'))
+        self.assertEqual(self.note.author, self.author)
 
     def test_author_can_delete_note(self):
         """Тест на удаление своей заметки."""
